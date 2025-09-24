@@ -38,8 +38,12 @@ amplifyCustomDomains=`aws amplify list-domain-associations --region $REGION --ap
 amplifyCustomDomain=`echo $amplifyCustomDomains | jq -r 'select(.domainAssociations | length > 0) | .domainAssociations[0].domainName'`
 
 if [ -n "$amplifyCustomDomain" ]; then
-  amplifyCustomDomainPrefix=$(echo $amplifyCustomDomains | jq -r 'select(.domainAssociations | length > 0) | .domainAssociations[0].subDomains[] | select(.subDomainSetting.branchName=="main") | .subDomainSetting.prefix')
-  amplifyDomain=$([ -z "$amplifyCustomDomainPrefix" ] && echo $amplifyCustomDomain || echo $amplifyCustomDomainPrefix.$amplifyCustomDomain)
+  amplifyCustomDomainPrefix=$(echo $amplifyCustomDomains | jq -r 'select(.domainAssociations | length > 0) | .domainAssociations[0].subDomains[] | select(.subDomainSetting.branchName=="main") | .subDomainSetting.prefix // empty')
+  if [ -z "$amplifyCustomDomainPrefix" ] || [ "$amplifyCustomDomainPrefix" = "null" ]; then
+    amplifyDomain=$amplifyCustomDomain
+  else
+    amplifyDomain=$amplifyCustomDomainPrefix.$amplifyCustomDomain
+  fi
 fi
 
 echo $amplifyDomain
